@@ -9,6 +9,8 @@ module.exports = {
     '!**/*.test.{js,ts}',
     '!**/*_MOCK_.{js,ts}',
   ],
+  preset: 'ts-jest',
+  testEnvironment: 'node',
   moduleDirectories: ['node_modules'],
   testRegex: '.*\\.test.ts$',
   snapshotSerializers: [],
