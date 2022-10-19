@@ -8,16 +8,6 @@ import { MessagingProtocol } from '../interfaces/messaging-protocol';
 import { PersistencyProtocol } from '../interfaces/persistency-protocol';
 import { CustomerOrder } from '../interfaces/customer-protocol';
 
-const emptyShoppingCartMock: ShoppingCartProtocol = {
-  items: [] as CartItem[],
-  addItem: (item: CartItem) => {},
-  removeItem: (index: number) => {},
-  total: () => 2,
-  totalWithDicount: () => 2,
-  isEmpty: () => true,
-  clear: () => {},
-};
-
 const shoppingCartMock: ShoppingCartProtocol = {
   items: [] as CartItem[],
   addItem: (item: CartItem) => {},
@@ -47,55 +37,56 @@ describe('order', () => {
     jest.resetAllMocks();
   });
 
-  describe('given a order instance with a empty shopping cart', () => {
-    const sut = new Order(emptyShoppingCartMock, messagingMock, persistencyMock, customerMock);
-    describe('when we call the checkout method', () => {
-      it('must be log', () => {
-        const consoleMock = jest.spyOn(console, 'log');
-
-        sut.checkout();
-        expect(consoleMock).toHaveBeenCalledWith('Seu carrinho está vazio');
-      });
-    });
-  });
-
-  describe('given a order instance with items in the shopping cart', () => {
+  describe('given an order instance', () => {
     const sut = new Order(shoppingCartMock, messagingMock, persistencyMock, customerMock);
+
     describe('when we call the checkout method', () => {
-      it('must be closed the order', () => {
-        sut.checkout();
-        expect(sut.orderStatus).toBe('closed');
+      describe('and shopping cart is empty', () => {
+        it('must be log a message, and dont close the order', () => {
+          jest.spyOn(shoppingCartMock, 'isEmpty').mockReturnValue(true);
+          const consoleMock = jest.spyOn(console, 'log');
+
+          sut.checkout();
+          expect(consoleMock).toHaveBeenCalledWith('Seu carrinho está vazio');
+          expect(sut.orderStatus).toBe('open');
+        });
       });
 
-      it('must be log', () => {
-        const consoleMock = jest.spyOn(console, 'log');
+      describe('and the shopping cart has items', () => {
+        it('must be closed the order', () => {
+          sut.checkout();
+          expect(sut.orderStatus).toBe('closed');
+        });
 
-        sut.checkout();
-        expect(consoleMock).toHaveBeenCalledWith(
-          'O cliente é:',
-          customerMock.getName(),
-          customerMock.getIDN(),
-        );
-      });
+        it('should log the client name and IDN', () => {
+          const consoleMock = jest.spyOn(console, 'log');
+          sut.checkout();
+          expect(consoleMock).toHaveBeenCalledWith(
+            'O cliente é:',
+            customerMock.getName(),
+            customerMock.getIDN(),
+          );
+        });
 
-      it('must be call the send message', () => {
-        const sendMessageSpy = jest.spyOn(messagingMock, 'sendMessage');
-        sut.checkout();
-        expect(sendMessageSpy).toHaveBeenCalledWith(
-          `Seu pedido com total de ${shoppingCartMock.totalWithDicount()} foi recebido.`,
-        );
-      });
+        it('should call the send message', () => {
+          const sendMessageSpy = jest.spyOn(messagingMock, 'sendMessage');
+          sut.checkout();
+          expect(sendMessageSpy).toHaveBeenCalledWith(
+            `Seu pedido com total de ${shoppingCartMock.totalWithDicount()} foi recebido.`,
+          );
+        });
 
-      it('must be save the order', () => {
-        const persistencySpy = jest.spyOn(persistencyMock, 'saveOrder');
-        sut.checkout();
-        expect(persistencySpy).toHaveBeenCalledTimes(1);
-      });
+        it('should save the order', () => {
+          const persistencySpy = jest.spyOn(persistencyMock, 'saveOrder');
+          sut.checkout();
+          expect(persistencySpy).toHaveBeenCalledTimes(1);
+        });
 
-      it('must be clear the shopping cart', () => {
-        const shoppingCartSpy = jest.spyOn(shoppingCartMock, 'clear');
-        sut.checkout();
-        expect(shoppingCartSpy).toHaveBeenCalledTimes(1);
+        it('must be clear the shopping cart', () => {
+          const shoppingCartSpy = jest.spyOn(shoppingCartMock, 'clear');
+          sut.checkout();
+          expect(shoppingCartSpy).toHaveBeenCalledTimes(1);
+        });
       });
     });
   });
