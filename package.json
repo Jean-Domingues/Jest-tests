@@ -1,10 +1,10 @@
 {
-  "name": "typescriptsolid",
+  "name": "jest_tests",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --coverage --colors",
+    "test": "jest --coverage --colors --silent --noStackTrace",
     "test:silent": "jest --watchAll --silent --noStackTrace --coverage=false"
   },
   "keywords": [],
